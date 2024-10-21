@@ -22,6 +22,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
+library work;
+use work.data_types_bus_interface_unit.all;
 entity bus_interface_unit is
     Generic (
         clk:std_logic   -- The clock input internally connected
@@ -40,8 +42,11 @@ entity bus_interface_unit is
 end bus_interface_unit;
 
 architecture Behavioral of bus_interface_unit is
+    --get instruction and set the type
     component bus_interface_instruction_decoder is
     end component;
+    
+    signal cmd_to_be_executed: bus_interface_cmd := idle;
     
 begin
 
