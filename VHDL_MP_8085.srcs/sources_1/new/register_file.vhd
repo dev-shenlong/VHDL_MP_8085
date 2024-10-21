@@ -57,6 +57,7 @@ entity register_file is
     Port ( 
         register_type: std_logic;
         register_code: in std_logic_vector(2 downto 0);
+        register_operation_type: in std_logic;
         data: inout std_logic_vector(15 downto 0) 
         
     );
@@ -74,9 +75,9 @@ architecture Behavioral of register_file is
             
         );
     end component register_individual;
-    signal temp_data
+    signal temp_data_8_bit: std_logic_vector(7 downto 0):="ZZZZZZZZ";
 begin
     generate_8bit: for i in 0 to 7 generate
-        register_8bit: register_individual generic map(data_size => 8) port map(operation_type => , data_port => )
-
+        register_8bit: register_individual generic map(data_size => 8) port map(operation_type => register_operation_type, data_port => temp_data_8_bit);
+    end generate generate_8bit;
 end Behavioral;
