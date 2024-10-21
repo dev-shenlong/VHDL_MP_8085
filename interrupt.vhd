@@ -74,7 +74,7 @@ begin
             when IDLE =>
                 if irq_trap = '1' then
                     interrupt_vector <= "0000000000100100"; -- TRAP vector: 0024H
-                    next_state <= SAVE_STATE;
+                    next_state <= LOAD_VECTOR;
                     
                 elsif irq_rst75 = '1' then
                     interrupt_vector <= "0000000000111100"; -- RST 7.5 vector: 003C
