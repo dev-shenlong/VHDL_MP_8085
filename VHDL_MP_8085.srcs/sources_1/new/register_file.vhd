@@ -60,17 +60,18 @@ entity register_file is
         register_type: std_logic;
         register_code: in std_logic_vector(0 to 2);
         register_operation_type: in std_logic;
-        data: inout std_logic_vector(15 downto 0) 
-        
-    );
+        data: inout std_logic_vector(15 downto 0)
+        );
 end register_file;
 
 architecture Behavioral of register_file is
+        signal A,B,C,D,E,H,L: std_logic_vector(7 downto 0):= "ZZZZZZZZ";
+        signal PSW, PC, SP: std_logic_vector(15 downto 0):= "ZZZZZZZZZZZZZZZZ";
 begin
     process(register_type, register_code, register_operation_type, data) is
-        variable A,B,C,D,E,H,L: std_logic_vector(7 downto 0):= "ZZZZZZZZ";
-        variable PSW, PC, SP: std_logic_vector(15 downto 0):= "ZZZZZZZZZZZZZZZZ";
+    
     begin
+        data<= "ZZZZZZZZZZZZZZZZ";
         if register_type = '0' then
             select_register_8_bit: case register_code is
             
@@ -78,43 +79,44 @@ begin
                     if register_operation_type = '1' then
                         data(7 downto 0) <= B;
                     elsif register_operation_type = '0' then
-                        B := data(7 downto 0);
+
+                        B <= data(7 downto 0);
                     end if;
                 when "001" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= C;
                     elsif register_operation_type = '0' then
-                        C := data(7 downto 0);
+                        C <= data(7 downto 0);
                     end if;
                 when "010" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= D;
                     elsif register_operation_type = '0' then
-                        D := data(7 downto 0);
+                        D<= data(7 downto 0);
                     end if;
                 when "011" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= E;
                     elsif register_operation_type = '0' then
-                        E := data(7 downto 0);
+                        E <= data(7 downto 0);
                     end if;
                 when "100" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= H;
                     elsif register_operation_type = '0' then
-                        H := data(7 downto 0);
+                        H <= data(7 downto 0);
                     end if;
                 when "101" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= L;
                     elsif register_operation_type = '0' then
-                        L := data(7 downto 0);
+                        L <= data(7 downto 0);
                     end if;
                 when "111" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= A;
                     elsif register_operation_type = '0' then
-                        A := data(7 downto 0);
+                        A <= data(7 downto 0);
                     end if;
                 when others =>
                         assert 1 /=1 report "Incorrect Register code" severity error;
@@ -127,24 +129,24 @@ begin
                         data(7 downto 0) <= C;
                         data(15 downto 8) <= B;
                     elsif register_operation_type = '0' then
-                        B := data(15 downto 8);
-                        C :=data(7 downto 0);
+                        B <= data(15 downto 8);
+                        C <=data(7 downto 0);
                     end if;
                 when "Z01" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= E;
                         data(15 downto 8) <= D;
                     elsif register_operation_type = '0' then
-                        D := data(15 downto 8);
-                        E :=data(7 downto 0);
+                        D <= data(15 downto 8);
+                        E <=data(7 downto 0);
                     end if;
                 when "Z10" =>
                     if register_operation_type = '1' then
                         data(7 downto 0) <= L;
                         data(15 downto 8) <= H;
                     elsif register_operation_type = '0' then
-                        H := data(15 downto 8);
-                        L :=data(7 downto 0);
+                        H <= data(15 downto 8);
+                        L <=data(7 downto 0);
                     end if;
                 when others =>
                         assert 1 /=1 report "Incorrect Register code" severity error;
