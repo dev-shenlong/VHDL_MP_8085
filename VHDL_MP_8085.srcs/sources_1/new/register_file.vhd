@@ -22,7 +22,7 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 library work;
-use work;
+
 -- Uncomment the following library declaration if using
 -- arithmetic functions with Signed or Unsigned values
 --use IEEE.NUMERIC_STD.ALL;
@@ -43,20 +43,22 @@ use work;
 -- M 110
 -- A 111
 -- 16 bit Register Code
--- BC 00
--- DE 01
--- HL 10
--- PSW 11
--- PC 100
+-- BC Z00
+-- DE Z01
+-- HL Z10
+-- PSW Z11 -- Not donne yet
+-- PC 100 
 
 
 --PORTS
 -- Register type 0 for 8 bit and 1 for 16 bit
+-- Register Code is the code for each as detailed above
+-- data is the data to be written / read from
 
 entity register_file is
     Port ( 
         register_type: std_logic;
-        register_code: in std_logic_vector(2 downto 0);
+        register_code: in std_logic_vector(0 to 2);
         register_operation_type: in std_logic;
         data: inout std_logic_vector(15 downto 0) 
         
@@ -64,20 +66,89 @@ entity register_file is
 end register_file;
 
 architecture Behavioral of register_file is
-    component register_individual is
-        Generic
-        (
-            data_size: integer:=8
-        );
-        Port ( 
-            operation_type: in std_logic;
-            data_port: inout std_logic_vector(data_size-1 downto 0)
-            
-        );
-    end component register_individual;
-    signal temp_data_8_bit: std_logic_vector(7 downto 0):="ZZZZZZZZ";
 begin
-    generate_8bit: for i in 0 to 7 generate
-        register_8bit: register_individual generic map(data_size => 8) port map(operation_type => register_operation_type, data_port => temp_data_8_bit);
-    end generate generate_8bit;
+    process(register_type, register_code, register_operation_type, data) is
+        variable A,B,C,D,E,H,L: std_logic_vector(7 downto 0):= "ZZZZZZZZ";
+        variable PSW, PC, SP: std_logic_vector(15 downto 0):= "ZZZZZZZZZZZZZZZZ";
+    begin
+        if register_type = '0' then
+            select_register_8_bit: case register_code is
+            
+                when "000" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= B;
+                    elsif register_operation_type = '0' then
+                        B := data(7 downto 0);
+                    end if;
+                when "001" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= C;
+                    elsif register_operation_type = '0' then
+                        C := data(7 downto 0);
+                    end if;
+                when "010" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= D;
+                    elsif register_operation_type = '0' then
+                        D := data(7 downto 0);
+                    end if;
+                when "011" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= E;
+                    elsif register_operation_type = '0' then
+                        E := data(7 downto 0);
+                    end if;
+                when "100" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= H;
+                    elsif register_operation_type = '0' then
+                        H := data(7 downto 0);
+                    end if;
+                when "101" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= L;
+                    elsif register_operation_type = '0' then
+                        L := data(7 downto 0);
+                    end if;
+                when "111" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= A;
+                    elsif register_operation_type = '0' then
+                        A := data(7 downto 0);
+                    end if;
+                when others =>
+                        assert 1 /=1 report "Incorrect Register code" severity error;
+            end case ;
+        else
+             select_register_16_bit: case register_code is
+            
+                when "Z00" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= C;
+                        data(15 downto 8) <= B;
+                    elsif register_operation_type = '0' then
+                        B := data(15 downto 8);
+                        C :=data(7 downto 0);
+                    end if;
+                when "Z01" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= E;
+                        data(15 downto 8) <= D;
+                    elsif register_operation_type = '0' then
+                        D := data(15 downto 8);
+                        E :=data(7 downto 0);
+                    end if;
+                when "Z10" =>
+                    if register_operation_type = '1' then
+                        data(7 downto 0) <= L;
+                        data(15 downto 8) <= H;
+                    elsif register_operation_type = '0' then
+                        H := data(15 downto 8);
+                        L :=data(7 downto 0);
+                    end if;
+                when others =>
+                        assert 1 /=1 report "Incorrect Register code" severity error;
+            end case ;
+        end if;
+    end process;   
 end Behavioral;
