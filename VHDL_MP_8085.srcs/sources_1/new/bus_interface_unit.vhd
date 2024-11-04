@@ -32,8 +32,8 @@ entity bus_interface_unit is
     Port (
         A: out std_logic_vector(7 downto 0); -- Address bus that carry the higher address bus
         AD: inout std_logic_vector(7 downto 0); -- Address and Data bus multiplexed with lower Adrress bus
-        S: out std_logic_vector(1 downto 0);
-        io_not_m : out std_logic;
+        S: inout std_logic_vector(1 downto 0):="ZZ";
+        io_not_m : inout std_logic:='Z';
         start: in std_logic;
         done: out std_logic; -- Status 
         command: in std_logic_vector(7 downto 0) -- DoData Pulse to interpret which command to carry out
@@ -49,6 +49,6 @@ architecture Behavioral of bus_interface_unit is
     signal cmd_to_be_executed: bus_interface_cmd := idle;
     
 begin
-
+    
 
 end Behavioral;
