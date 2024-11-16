@@ -24,4 +24,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 package data_types_bus_interface_unit is
     type bus_interface_cmd is (idle, move, read, write, op_code_fetch,interrupt); -- This is an internal type for the decoder to keep track of what command to perform
+
 end package;
+
