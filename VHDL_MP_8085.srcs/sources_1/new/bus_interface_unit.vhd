@@ -58,6 +58,7 @@ architecture Behavioral of bus_interface_unit is
     signal register_operation_type: std_logic:='Z';
     signal register_data: std_logic_vector(15 downto 0):="ZZZZZZZZZZZZZZZZ";
     signal register_data_buffer: std_logic_vector(7 downto 0);
+    signal register_pair_data_buffer: std_logic_vector(15 downto 0) := "ZZZZZZZZZZZZZZZZ";
 
     component register_file is
         Port ( 
@@ -79,19 +80,104 @@ begin
                 cmd_to_be_executed <= op_code_fetch; --Confirm/Reset
                 if(command /= "ZZZZZZZZ") then
                     if(command(7 downto 6) == "00") then 
-                        command_instruct:case(command(5 downto 3))
-                            when "000" => --STAX command B
+                        if(command(2 downto 0) == "010") then -- Load/ Store Statements
+                            command_instruct:case(command(5 downto 3))
+                                when "000" => --STAX command B
+                                    register_type<= '1';
+                                    register_operation_type <= '1';
+                                    register_code <= "Z00";
 
-                            when "001" => -- LDAX command B
-                            when "010" => -- STAX D
-                            when "011" => -- LDAX D
-                            when "100" => --SHLD
-                            when "101" => -- LHLD
-                            when "110" => -- STA
-                            when "111" => -- LDA
-                        end case command_instruct;
-                    elsif (command(7 downto 6) == "01") then -- MOV statements
+                                    -- Cross check if data_buffer is being used properly and is being driven to high impedance
+                                    A <= register_data(15 downto 8);
+                                    AD <= register_data(7 downto 0);  
+                                    register_type <= '0'; -- 8 bit register
+                                    register_operation_type <= '1'; -- Read operation
+                                    register_code <= "111";   -- Source address
+                                    data_buffer <= register_data(7 downto 0); -- Fetching data from source
+                                    cmd_to_be_executed <= memory_write;
+
+
+                                when "001" => -- LDAX command B
+                                    register_type<= '1';
+                                    register_operation_type <= '1';
+                                    register_code <= "Z00";
+
+                                    -- Cross check if data_buffer is being used properly and is being driven to high impedance
+                                    A <= register_data(15 downto 8); 
+                                    AD <= register_data(7 downto 0); 
+                                    data_buffer <= "ZZZZZZZZ";
+
+                                    cmd_to_be_executed <= memory_read; 
+                                    -- wait until finished how?
+                                    register_type <= '0'; -- 8 bit register
+                                    register_data(7 downto 0) <= data_buffer;
+                                    register_operation_type <= '0'; -- Write operation
+
+                                    register_code <= "111";   -- Source address
+                                     -- Fetching data from source
+                                when "010" => -- STAX D
+                                    register_type<= '1';
+                                    register_operation_type <= '1';
+                                    register_code <= "Z01";
+
+                                    -- Cross check if data_buffer is being used properly and is being driven to high impedance
+                                    A <= register_data(15 downto 8);
+                                    AD <= register_data(7 downto 0);  
+                                    register_type <= '0'; -- 8 bit register
+                                    register_operation_type <= '1'; -- Read operation
+                                    register_code <= "111";   -- Source address
+                                    data_buffer <= register_data(7 downto 0); -- Fetching data from source
+                                    cmd_to_be_executed <= memory_write;
+                                when "011" => -- LDAX D
+                                    register_type<= '1';
+                                    register_operation_type <= '1';
+                                    register_code <= "Z01";
+
+                                    -- Cross check if data_buffer is being used properly and is being driven to high impedance
+                                    A <= register_data(15 downto 8); 
+                                    AD <= register_data(7 downto 0); 
+                                    data_buffer <= "ZZZZZZZZ";
+
+                                    cmd_to_be_executed <= memory_read; 
+                                    -- wait until finished how?
+                                    register_type <= '0'; -- 8 bit register
+                                    register_data(7 downto 0) <= data_buffer;
+                                    register_operation_type <= '0'; -- Write operation
+
+                                    register_code <= "111";   -- Source address
+                                    -- Fetching data from source
+
+                                -- Need to discuss with instruction decoder group(ashish bhaiya)
+                                -- How to get next opcode inorder to get the memory locations
+                                when "100" => --SHLD
+                                when "101" => -- LHLD
+                                when "110" => -- STA
+                                when "111" => -- LDA
+                            end case command_instruct;
+                        end if;
+                    elsif (command(7 downto 6) == "01") then -- MOV statements 
                         if(falling_edge(clk)) then
+                            if(command(2 downto 0) = "110") then
+                                --Reading from memory
+                                register_type<= '1';
+                                register_operation_type <= '1';
+                                register_code <= "Z10";
+
+                                A <= register_data(15 downto 8);
+                                AD <= register_data(7 downto 0);
+                                data_buffer <= "ZZZZZZZZ";
+                                cmd_to_be_executed <= memory_read; --Check if read is a keyword
+                                --Add a condition check wheter read cycle has been competed (Future me ;))
+
+                                if(data_buffer /= "ZZZZZZZZ") then
+                                    register_type<= '0'; -- Writing data to M
+                                    register_operation_type <= '0';
+                                    register_code <= "110";
+                                    register_data <= data_buffer;
+                                end if;
+
+
+                            end if;
                             register_type <= '0'; -- 8 bit register
                             register_operation_type <= '1'; -- Read operation
                             register_code <= command(2 downto 0);   -- Source address
@@ -101,8 +187,25 @@ begin
                             register_code <= command(5 downto 3); -- Destination Address
                             register_data(7 downto 0) <= register_data_buffer; -- Sending Data to destination
 
+                            if(command(5 downto 3) = "110") then
+                                    --Reading from memory
+                                    register_type<= '1';
+                                    register_operation_type <= '1';
+                                    register_code <= "Z10";
 
+                                    A <= register_data(15 downto 8);
+                                    AD <= register_data(7 downto 0);
+                                    register_type <= '0'; -- 8 bit register
+                                    register_operation_type <= '1'; -- Read operation
+                                    register_code <= "110";   -- Source address
+                                    register_data_buffer <= register_data(7 downto 0); -- Fetching data from source
 
+                                    data_buffer <= register_data_buffer;
+                                    cmd_to_be_executed <= memory_write; --Check if read is a keyword
+                                    --Add a condition check wheter read cycle has been competed (Future me ;))
+
+                            end if;
+                            
                         end if;
                     end if;
                 end if;
@@ -150,7 +253,7 @@ begin
                                 
                         end case;
                         
-                    when read =>  --Test later
+                    when memory_read =>  --Test later
                         case(stage) is
                             when 0 =>
                                 if falling_edge(clk) then
@@ -184,7 +287,7 @@ begin
                                 stage := 0;
                                 
                         end case;
-                    when write => --Testing required
+                    when memory_write => --Testing required
                         case(stage) is
                             when 0 =>
                                 if falling_edge(clk) then
