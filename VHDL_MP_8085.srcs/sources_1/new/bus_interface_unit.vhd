@@ -52,28 +52,62 @@ architecture Behavioral of bus_interface_unit is
     signal address: std_logic_vector(15 downto 0):="ZZZZZZZZZZZZZZZZ";
     signal data_buffer: std_logic_vector(7 downto 0):= "ZZZZZZZZ";
     signal command:std_logic_vector(7 downto 0);
+
+    signal register_type:std_logic:='Z';
+    signal register_code:std_logic_vector(0 to 2):="ZZZ";
+    signal register_operation_type: std_logic:='Z';
+    signal register_data: std_logic_vector(15 downto 0):="ZZZZZZZZZZZZZZZZ";
+    signal register_data_buffer: std_logic_vector(7 downto 0);
+
+    component register_file is
+        Port ( 
+            register_type: std_logic;
+            register_code: in std_logic_vector(0 to 2);
+            register_operation_type: in std_logic;
+            data: inout std_logic_vector(15 downto 0)
+            );
+    end component register_file;
     
 begin
     
-
+    reg_file: register_file Port map(register_type=>register_type, register_code=>register_code, register_operation_type=>register_operation_type, data =>register_data);
+    
     opcode_control_process: process(clk, ale,command)
         if(rising_edge(ale)) then
             begin
-                command := "ZZZZZZZZ";
-                cmd_to_be_executed <= op_code_fetch;
+                command <= "ZZZZZZZZ";
+                cmd_to_be_executed <= op_code_fetch; --Confirm/Reset
+                if(command /= "ZZZZZZZZ") then
+                    if(command(7 downto 6) == "00") then 
+                        command_instruct:case(command(5 downto 3))
+                            when "000" => --STAX command B
 
-                command_instruct:case(command(5 downto 3))
-                    when "000" => --STAX command B
+                            when "001" => -- LDAX command B
+                            when "010" => -- STAX D
+                            when "011" => -- LDAX D
+                            when "100" => --SHLD
+                            when "101" => -- LHLD
+                            when "110" => -- STA
+                            when "111" => -- LDA
+                        end case command_instruct;
+                    elsif (command(7 downto 6) == "01") then -- MOV statements
+                        if(falling_edge(clk)) then
+                            register_type <= '0'; -- 8 bit register
+                            register_operation_type <= '1'; -- Read operation
+                            register_code <= command(2 downto 0);   -- Source address
+                            register_data_buffer <= register_data(7 downto 0); -- Fetching data from source
 
-                    when "001" => -- LDAX command B
-                    when "010" => -- STAX D
-                    when "011" => -- LDAX D
-                    when "100" => --SHLD
-                    when "101" => -- LHLD
-                    when "110" => -- STA
-                    when "111" => -- LDA
-            end case command_instruct;
+                            register_operation_type <= '0';
+                            register_code <= command(5 downto 3); -- Destination Address
+                            register_data(7 downto 0) <= register_data_buffer; -- Sending Data to destination
+
+
+
+                        end if;
+                    end if;
+                end if;
         end if;
+
     end process opcode_control_process;
 
     bus_interface_fsm: process(cmd_to_be_executed )

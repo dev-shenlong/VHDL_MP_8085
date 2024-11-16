@@ -54,6 +54,7 @@ library work;
 -- Register type 0 for 8 bit and 1 for 16 bit
 -- Register Code is the code for each as detailed above
 -- data is the data to be written / read from
+-- register operation type 1 for read and 0 for write
 
 entity register_file is
     Port ( 
