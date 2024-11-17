@@ -9,17 +9,17 @@ entity instruction_processor is
   instruction_register: out std_logic_vector(7 downto 0);
   IOM, ALE, S1, S0: out std_logic;
   A: out std_logic_vector(15 downto 8);
-  AD: inout std_logic_vector(7 downto 0);
+  AD, H, L: inout std_logic_vector(7 downto 0);
   bytes: inout std_logic_vector(1 downto 0);
   byte1, byte2: out std_logic_vector(7 downto 0);
   psw: in std_logic_vector(7 downto 0);
-  stack_pointer: in std_logic_vector(15 downto 0);
+  stack_pointer: inout std_logic_vector(15 downto 0);
   interrupt: in std_logic);
 end instruction_processor;
 
 architecture Behavioral of instruction_processor is
-  signal pc_int: std_logic_vector(15 downto 0) := "0000011001000011";
-  signal next_pc: std_logic_vector(15 downto 0);
+  signal pc_int: std_logic_vector(15 downto 0) := "0000000000000000";
+  signal next_pc,sp,next_sp: std_logic_vector(15 downto 0);
   signal branch: std_logic := '0';
   signal int_inst: std_logic_vector(7 downto 0);
   signal bytes_reqd: std_logic_vector(1 downto 0):="00";
@@ -42,6 +42,7 @@ begin
       else
         curr_state <= next_state;  -- Update curr_state here
         pc_int <= next_pc;          -- Update pc_int here
+        sp <= next_sp;
       end if;
     end if;
   end process;
@@ -190,6 +191,12 @@ begin
         if (bytes_reqd <= "01") or (bytes_reqd <= "10") then
             next_state <= Fetch_op1;
         end if;
+        if branch = '1' then
+            if (int_inst(3 downto 0) = x"0") or (int_inst(3 downto 0) = x"8") or (int_inst(3 downto 0) = x"9") then
+                next_pc <= H & L;
+                next_sp <= std_logic_vector(unsigned(sp) - 1);
+            end if;
+        end if;
       when Fetch_op1 =>
         A <= pc_int(15 downto 8);
         AD <= pc_int(7 downto 0);
@@ -200,14 +207,9 @@ begin
         b1 <= AD;
         bytes_reqd <= std_logic_vector(unsigned(bytes_reqd) - 1);
         if bytes_reqd = "00" then
-            if branch = '1' then
-                next_pc <= b1;
-                next_state <= T1;
-            else 
-                next_pc <= std_logic_vector(unsigned(pc_int) + 1);
-                DoData <= '1';
-                next_state <= T1;
-            end if;
+            next_pc <= std_logic_vector(unsigned(pc_int) + 1);
+            DoData <= '1';
+            next_state <= T1;
         elsif bytes_reqd = "01" then
             next_pc <= std_logic_vector(unsigned(pc_int) + 1);
             next_state <= Fetch_op2;
@@ -222,7 +224,16 @@ begin
         b2 <= AD;
         next_pc <= std_logic_vector(unsigned(pc_int) + 1);
         bytes_reqd <= std_logic_vector(unsigned(bytes_reqd) - 1);
-        DoData <= '1';
+        if branch = '1' then
+            next_pc <= b1 & b2;
+            if (int_inst(3 downto 0) = x"d") or (int_inst(3 downto 0) = x"4") or (int_inst(3 downto 0) = x"c") then
+                H <= b1;
+                L <= b2;
+                next_sp <= std_logic_vector(unsigned(sp) + 1);
+            end if;
+        else 
+            DoData <= '1';
+        end if;
         next_state <= T1;
       when others =>
         next_state <= T1;  -- Default case
@@ -233,5 +244,6 @@ begin
   bytes <= bytes_reqd;
   byte1 <= b1;
   byte2 <= b2;
+  stack_pointer <= sp;
 
 end Behavioral;
