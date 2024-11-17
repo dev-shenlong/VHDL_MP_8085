@@ -193,8 +193,18 @@ begin
         end if;
         if branch = '1' then
             if (int_inst(3 downto 0) = x"0") or (int_inst(3 downto 0) = x"8") or (int_inst(3 downto 0) = x"9") then
-                next_pc <= H & L;
-                next_sp <= std_logic_vector(unsigned(sp) - 1);
+                if int_inst = x"c9" or
+                (int_inst = x"c0" and psw(6) = '0') or
+                (int_inst = x"c8" and psw(6) = '1') or
+                (int_inst = x"d0" and psw(0) = '0') or
+                (int_inst = x"d8" and psw(0) = '1') or
+                (int_inst = x"e0" and psw(2) = '0') or
+                (int_inst = x"e8" and psw(2) = '0') or
+                (int_inst = x"f0" and psw(7) = '0') or
+                (int_inst = x"f8" and psw(7) = '0') then
+                    next_pc <= H & L;
+                    next_sp <= std_logic_vector(unsigned(sp) - 1);
+                end if;
             end if;
         end if;
       when Fetch_op1 =>
@@ -225,11 +235,30 @@ begin
         next_pc <= std_logic_vector(unsigned(pc_int) + 1);
         bytes_reqd <= std_logic_vector(unsigned(bytes_reqd) - 1);
         if branch = '1' then
-            next_pc <= b1 & b2;
-            if (int_inst(3 downto 0) = x"d") or (int_inst(3 downto 0) = x"4") or (int_inst(3 downto 0) = x"c") then
-                H <= b1;
-                L <= b2;
-                next_sp <= std_logic_vector(unsigned(sp) + 1);
+            if int_inst = x"c3" or
+            (int_inst = x"c2" and psw(6) = '0') or
+            (int_inst = x"ca" and psw(6) = '1') or
+            (int_inst = x"d2" and psw(0) = '0') or
+            (int_inst = x"da" and psw(0) = '1') or
+            (int_inst = x"e2" and psw(2) = '0') or
+            (int_inst = x"ea" and psw(2) = '0') or
+            (int_inst = x"f2" and psw(7) = '0') or
+            (int_inst = x"fa" and psw(7) = '0') or
+            int_inst = x"cd" or
+            (int_inst = x"c4" and psw(6) = '0') or
+            (int_inst = x"cc" and psw(6) = '1') or
+            (int_inst = x"d4" and psw(0) = '0') or
+            (int_inst = x"dc" and psw(0) = '1') or
+            (int_inst = x"e4" and psw(2) = '0') or
+            (int_inst = x"ec" and psw(2) = '0') or
+            (int_inst = x"f4" and psw(7) = '0') or
+            (int_inst = x"fc" and psw(7) = '0') then
+                next_pc <= b1 & b2;
+                if (int_inst(3 downto 0) = x"d") or (int_inst(3 downto 0) = x"4") or (int_inst(3 downto 0) = x"c") then
+                    H <= b1;
+                    L <= b2;
+                    next_sp <= std_logic_vector(unsigned(sp) + 1);
+            end if;
             end if;
         else 
             DoData <= '1';
